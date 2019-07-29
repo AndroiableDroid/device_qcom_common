@@ -1,31 +1,12 @@
 # Board platforms lists to be used for
 # TARGET_BOARD_PLATFORM specific featurization
-QCOM_BOARD_PLATFORMS += msm8226
-QCOM_BOARD_PLATFORMS += msm8610
-QCOM_BOARD_PLATFORMS += msm8660
-QCOM_BOARD_PLATFORMS += msm8909
-QCOM_BOARD_PLATFORMS += msm8916
-QCOM_BOARD_PLATFORMS += msm8937
-QCOM_BOARD_PLATFORMS += msm8952
-QCOM_BOARD_PLATFORMS += msm8953
-QCOM_BOARD_PLATFORMS += msm8960
-QCOM_BOARD_PLATFORMS += msm8974
-QCOM_BOARD_PLATFORMS += msm8976
-QCOM_BOARD_PLATFORMS += msm8992
-QCOM_BOARD_PLATFORMS += msm8994
-QCOM_BOARD_PLATFORMS += msm8996
-QCOM_BOARD_PLATFORMS += msm8998
-QCOM_BOARD_PLATFORMS += msm_bronze
-QCOM_BOARD_PLATFORMS += apq8084
-QCOM_BOARD_PLATFORMS += sdm660
-QCOM_BOARD_PLATFORMS += sdm710
-QCOM_BOARD_PLATFORMS += sdm845
-
-#List of targets that use video hw
-MSM_VIDC_TARGET_LIST := msm8974 msm8610 msm8226 apq8084 msm8916 msm8994 msm8909 msm8992 msm8996 msm8952 msm8937 msm8953 msm8998 sdm660 sdm710 sdm845
-
-#List of targets that use master side content protection
-MASTER_SIDE_CP_TARGET_LIST := msm8996 msm8998 sdm660 sdm710 sdm845
+QCOM_BOARD_PLATFORMS += msm7x30 msm7x27 msm7x27a msm7k qsd8k \
+	msm7x27a msm7x30 msm8660 msm8960 \
+	msm8226 msm8610 msm8974 apq8084 \
+	msm8992 msm8994 \
+	msm8909 msm8916 msm8952 \
+	msm8937 msm8953 msm8996 msm8998 \
+	sdm660 sdm710 sdm845 trinket sm6150 msmnile
 
 # vars for use by utils
 empty :=
@@ -227,4 +208,43 @@ $(strip \
     ) \
   $(if $(strip $(acn)),true,) \
 )
+endef
+
+# Enter project path into pathmap
+#
+# $(1): name
+# $(2): path
+#
+define project-set-path
+$(eval pathmap_PROJ += $(1):$(2))
+endef
+
+# Enter variant project path into pathmap
+#
+# $(1): name
+# $(2): variable to check
+# $(3): base path
+#
+define project-set-path-variant
+    $(call project-set-path,$(1),$(strip \
+        $(if $($(2)), \
+            $(3)-$($(2)), \
+            $(3))))
+endef
+
+# Returns the path to the requested module's include directory,
+# relative to the root of the source tree.
+#
+# $(1): a list of modules (or other named entities) to find the projects for
+define project-path-for
+$(foreach n,$(1),$(patsubst $(n):%,%,$(filter $(n):%,$(pathmap_PROJ))))
+endef
+
+define set-device-specific-path
+$(if $(USE_DEVICE_SPECIFIC_$(1)), \
+    $(if $(DEVICE_SPECIFIC_$(1)_PATH), \
+        $(eval path := $(DEVICE_SPECIFIC_$(1)_PATH)), \
+        $(eval path := $(TARGET_DEVICE_DIR)/$(2))), \
+    $(eval path := $(3))) \
+$(call project-set-path,qcom-$(2),$(strip $(path)))
 endef
